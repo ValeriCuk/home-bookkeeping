@@ -13,6 +13,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest){
+
         return ResponseEntity.ok("Login successful for user: " + loginRequest.getUsername());
     }
 }
