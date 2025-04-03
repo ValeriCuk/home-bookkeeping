@@ -1,28 +1,39 @@
 package com.finance.home_bookkeeping.Services;
 
+import com.finance.home_bookkeeping.CustomExceptions.UserAlreadyExistsException;
+import com.finance.home_bookkeeping.CustomExceptions.UserNotFoundException;
+import com.finance.home_bookkeeping.CustomExceptions.WrongPasswordException;
 import com.finance.home_bookkeeping.DTO.UserDTO;
 import com.finance.home_bookkeeping.Entities.User;
 import com.finance.home_bookkeeping.Repositories.UserRepository;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-@RequiredArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
 @Service
 public class UserService {
 
     private PasswordEncoder passwordEncoder;
-    private final UserRepository userRepository;
+    private UserRepository userRepository;
 
-    public String registerUser(UserDTO userDTO) {
+    @Transactional
+    public void registerUser(UserDTO userDTO) throws UserAlreadyExistsException {
         if(isLoginTaken(userDTO.getLogin()))
-            return "Користувач з таким логіном вже існує!";
-
+            throw new UserAlreadyExistsException("Користувач з таким логіном вже існує!");
         if(isEmailTaken(userDTO.getEmail()))
-            return "Користувач з такою поштою вже існує!";
-
+            throw new UserAlreadyExistsException("Користувач з такою поштою вже існує!");
         userRepository.save(convertToEntity(userDTO));
-        return "Реєстрація успішна!";
+    }
+
+    public void loginUser(UserDTO userDTO) throws UserNotFoundException, WrongPasswordException {
+        User user = userRepository.findByLogin(userDTO.getLogin())
+                .orElseThrow(() -> new UserNotFoundException("Невірний логін!"));
+        if(!passwordEncoder.matches(userDTO.getPassword(), user.getPassword()))
+            throw new WrongPasswordException("Невірний пароль!");
     }
 
     private User convertToEntity(UserDTO userDTO) {
