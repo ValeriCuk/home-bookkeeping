@@ -1,7 +1,6 @@
 package com.finance.home_bookkeeping.Controllers;
 
 import com.finance.home_bookkeeping.CustomExceptions.UserAlreadyExistsException;
-import com.finance.home_bookkeeping.CustomExceptions.WrongPasswordException;
 import com.finance.home_bookkeeping.DTO.UserDTO;
 import com.finance.home_bookkeeping.Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,16 +27,6 @@ public class UserController {
             userService.registerUser(userDTO);
             return ResponseEntity.ok("Реєстрація успішна!");
         } catch (UserAlreadyExistsException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody UserDTO userDTO) {
-        try {
-            userService.loginUser(userDTO);
-            return ResponseEntity.ok("Вхід виконано!");
-        }catch (UserAlreadyExistsException | WrongPasswordException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

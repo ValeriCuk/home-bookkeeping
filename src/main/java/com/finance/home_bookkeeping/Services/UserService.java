@@ -2,23 +2,32 @@ package com.finance.home_bookkeeping.Services;
 
 import com.finance.home_bookkeeping.CustomExceptions.UserAlreadyExistsException;
 import com.finance.home_bookkeeping.CustomExceptions.UserNotFoundException;
-import com.finance.home_bookkeeping.CustomExceptions.WrongPasswordException;
 import com.finance.home_bookkeeping.DTO.UserDTO;
 import com.finance.home_bookkeeping.Entities.User;
 import com.finance.home_bookkeeping.Repositories.UserRepository;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@AllArgsConstructor
-@NoArgsConstructor
+import java.util.ArrayList;
+
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
     private PasswordEncoder passwordEncoder;
     private UserRepository userRepository;
+
+    public UserService() {}
+
+    @Autowired
+    public UserService(PasswordEncoder passwordEncoder, UserRepository userRepository) {
+        this.passwordEncoder = passwordEncoder;
+        this.userRepository = userRepository;
+    }
 
     @Transactional
     public void registerUser(UserDTO userDTO) throws UserAlreadyExistsException {
@@ -29,11 +38,15 @@ public class UserService {
         userRepository.save(convertToEntity(userDTO));
     }
 
-    public void loginUser(UserDTO userDTO) throws UserNotFoundException, WrongPasswordException {
-        User user = userRepository.findByLogin(userDTO.getLogin())
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByLogin(username)
                 .orElseThrow(() -> new UserNotFoundException("Невірний логін!"));
-        if(!passwordEncoder.matches(userDTO.getPassword(), user.getPassword()))
-            throw new WrongPasswordException("Невірний пароль!");
+        return new org.springframework.security.core.userdetails.User(
+                user.getLogin(),
+                user.getPassword(),
+                new ArrayList<>()
+        );
     }
 
     private User convertToEntity(UserDTO userDTO) {
