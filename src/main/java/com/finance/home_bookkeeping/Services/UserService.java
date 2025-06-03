@@ -1,7 +1,6 @@
 package com.finance.home_bookkeeping.Services;
 
 import com.finance.home_bookkeeping.CustomExceptions.UserAlreadyExistsException;
-import com.finance.home_bookkeeping.CustomExceptions.UserNotFoundException;
 import com.finance.home_bookkeeping.DTO.UserDTO;
 import com.finance.home_bookkeeping.Entities.User;
 import com.finance.home_bookkeeping.Repositories.UserRepository;
@@ -40,8 +39,9 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        System.out.println("🔍 Пошук користувача з логіном: " + username);
         User user = userRepository.findByLogin(username)
-                .orElseThrow(() -> new UserNotFoundException("Невірний логін!"));
+                .orElseThrow(() -> new UsernameNotFoundException("Невірний логін!"));
         return new org.springframework.security.core.userdetails.User(
                 user.getLogin(),
                 user.getPassword(),
